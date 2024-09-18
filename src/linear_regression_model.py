@@ -1,5 +1,5 @@
-#-- Auther: John Wilson --
-#-- version 1.0 --
+#-- Auther: John Wilson -- #
+#-- version 1.0 -- #
 # Import necessary libraries for data processing, modeling, evaluation, and optimization
 import pandas as pd
 import numpy as np
@@ -10,9 +10,8 @@ from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
 from sklearn.preprocessing import StandardScaler
 import matplotlib.pyplot as plt
 from pulp import LpMaximize, LpProblem, LpVariable, lpSum, value
-
 class PlayerModel:
-	"""
+    """
     Class for creating and training a model to predict player performance.
     """
     
@@ -106,3 +105,31 @@ class PlayerModel:
         self.plot_feature_importance()
 
         return mae, mse, r2, mape, cv_mse
+
+    def plot_feature_importance(self):
+        """
+        Plots the feature importance based on the model's coefficients.
+        """
+        coefficients = self.model.coef_
+        feature_importance = np.abs(coefficients)
+        importance_df = pd.DataFrame({'Feature': self.features, 'Importance': feature_importance})
+        importance_df.sort_values(by='Importance', ascending=False, inplace=True)
+
+        plt.figure(figsize=(10, 6))
+        plt.barh(importance_df['Feature'], importance_df['Importance'], color='skyblue')
+        plt.xlabel('Importance')
+        plt.ylabel('Feature')
+        plt.title('Feature Importance')
+        plt.gca().invert_yaxis()
+        plt.show()
+
+    def add_predictions(self):
+        """
+        Adds the predicted performance to the dataframe.
+
+        Returns:
+            pd.DataFrame: Dataframe with an additional 'predicted_performance' column.
+        """
+        self.df['predicted_performance'] = self.model.predict(self.scaler.transform(self.df[self.features]))
+        return self.df
+    
