@@ -5,7 +5,6 @@ import pandas as pd
 import numpy as np
 from sklearn.model_selection import train_test_split, cross_val_score
 from sklearn.linear_model import LinearRegression
-from sklearn.ensemble import RandomForestRegressor
 from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
 from sklearn.preprocessing import StandardScaler
 import matplotlib.pyplot as plt
@@ -97,7 +96,7 @@ class PlayerModel:
         print(f"Cross-Validation MSE: {cv_mse}")
 
         # Print feature coefficients
-        print("\nFeature Coefficients:")
+        print("/nFeature Coefficients:")
         for feature, coef in zip(self.features, self.model.coef_):
             print(f"{feature}: {coef:.4f}")
 
@@ -223,7 +222,7 @@ if __name__ == "__main__":
     }
     
     # Load the player data
-    players_df = load_data('C:/Users/johns/Programming/Python/Research_project/code/FPL_model_JW/data/FPL_Player_GW2_24-25.csv')
+    players_df = load_data('C:/Users/johns/Programming/Python/Projects/FPL-Predictive-Models/data/FPL_Player_Data_GW4_24-25.csv')
 
     # Attackers model and selection
     attackers_df = players_df[players_df['element_type'] == 4]
@@ -266,18 +265,18 @@ if __name__ == "__main__":
     combined_squad = combined_squad[['web_name', 'Position', 'now_cost']].sort_values(by='Position')
     
     # Print the selected squad and total cost
-    print("\nCombined Squad:")
-    print("Defenders/Goalkeepers:\n", combined_squad[combined_squad['Position'] == 'Defender/Goalkeeper'])
-    print("Midfielders:\n", combined_squad[combined_squad['Position'] == 'Midfielder'])
-    print("Attackers:\n", combined_squad[combined_squad['Position'] == 'Attacker'])
+    print("/nCombined Squad:")
+    print("Defenders/Goalkeepers:/n", combined_squad[combined_squad['Position'] == 'Defender/Goalkeeper'])
+    print("Midfielders:/n", combined_squad[combined_squad['Position'] == 'Midfielder'])
+    print("Attackers:/n", combined_squad[combined_squad['Position'] == 'Attacker'])
 
     total_cost = combined_squad['now_cost'].sum()
-    print(f"\nTotal Cost of Selected Squad: {total_cost} million")
+    print(f"/nTotal Cost of Selected Squad: {total_cost} million")
 
     # Print average evaluation metrics for each position
     for position, metrics in metrics_dict.items():
         avg_metrics = np.mean(metrics, axis=0)
-        print(f"\nAverage Evaluation Metrics for {position}:")
+        print(f"/nAverage Evaluation Metrics for {position}:")
         print(f"  Mean Absolute Error (MAE): {avg_metrics[0]}")
         print(f"  Mean Squared Error (MSE): {avg_metrics[1]}")
         print(f"  R^2 Score: {avg_metrics[2]}")
@@ -285,6 +284,6 @@ if __name__ == "__main__":
         print(f"  Cross-Validation MSE: {avg_metrics[4]}")
 
         # Print feature coefficients for each position
-        print(f"\nFeature Coefficients for {position}:")
+        print(f"/nFeature Coefficients for {position}:")
         for feature, coef in coefficients_dict[position].items():
             print(f"  {feature}: {coef:.4f}")
