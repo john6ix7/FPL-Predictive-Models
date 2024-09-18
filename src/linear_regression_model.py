@@ -191,3 +191,19 @@ class TeamSelector:
         selected_team = self.df.loc[selected_indices]
 
         return selected_team
+
+def load_data(file_path):
+    """
+    Loads data from a CSV file.
+
+    Args:
+        file_path (str): Path to the CSV file.
+
+    Returns:
+        pd.DataFrame: Loaded dataframe or an empty dataframe if the file is not found.
+    """
+    try:
+        return pd.read_csv(file_path)
+    except FileNotFoundError:
+        print(f"Error: File not found at {file_path}")
+        return pd.DataFrame()
