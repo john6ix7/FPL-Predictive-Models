@@ -19,3 +19,8 @@ def fetch_data_from_api(endpoint):
         # Log an error message if the request failed
         print(f"Error: Unable to retrieve data from {full_url}. Status code: {response.status_code}")
         return None
+
+# Function to save a DataFrame as a CSV file
+def export_dataframe_to_csv(dataframe, file_path):
+    dataframe.to_csv(file_path, index=False)  # Save DataFrame to CSV without the index
+    print(f"Data successfully saved to {file_path}")
