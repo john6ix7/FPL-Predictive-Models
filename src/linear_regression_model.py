@@ -133,3 +133,61 @@ class PlayerModel:
         self.df['predicted_performance'] = self.model.predict(self.scaler.transform(self.df[self.features]))
         return self.df
     
+class TeamSelector:
+    """
+    Class to select the optimal team based on constraints using linear programming.
+    """
+    
+    def __init__(self, df, budget_constraint, max_players, exact_goalkeepers=None, exact_defenders=None):
+        """
+        Initializes the TeamSelector class.
+
+        Args:
+            df (pd.DataFrame): Dataframe containing player data.
+            budget_constraint (float): Maximum budget for selecting players.
+            max_players (int): Maximum number of players to select.
+            exact_goalkeepers (int): Exact number of goalkeepers to select (optional).
+            exact_defenders (int): Exact number of defenders to select (optional).
+        """
+        self.df = df
+        self.budget_constraint = budget_constraint
+        self.max_players = max_players
+        self.exact_goalkeepers = exact_goalkeepers
+        self.exact_defenders = exact_defenders
+
+    def select_players(self):
+        """
+        Solves the linear programming problem to select the optimal team based on performance.
+
+        Returns:
+            pd.DataFrame: Dataframe of selected players.
+        """
+        # Define the optimization problem
+        prob = LpProblem("Player_Selection_Problem", LpMaximize)
+
+        # Define decision variables for each player
+        player_vars = {index: LpVariable(f"Player_{index}", cat='Binary') for index in self.df.index}
+
+        # Objective function: maximize the sum of predicted performance of selected players
+        prob += lpSum(player_vars[i] * self.df.loc[i, 'predicted_performance'] for i in self.df.index)
+
+        # Budget constraint: sum of player costs must be within budget
+        prob += lpSum(player_vars[i] * self.df.loc[i, 'now_cost'] for i in self.df.index) <= self.budget_constraint
+
+        # Max players constraint: limit the number of selected players
+        prob += lpSum(player_vars[i] for i in self.df.index) <= self.max_players
+
+        # Position-specific constraints
+        if self.exact_goalkeepers is not None:
+            prob += lpSum(player_vars[i] for i in self.df.index if self.df.loc[i, 'element_type'] == 1) == self.exact_goalkeepers
+        if self.exact_defenders is not None:
+            prob += lpSum(player_vars[i] for i in self.df.index if self.df.loc[i, 'element_type'] == 2) == self.exact_defenders
+
+        # Solve the optimization problem
+        prob.solve()
+
+        # Get selected players based on the solution
+        selected_indices = [i for i in self.df.index if value(player_vars[i]) == 1]
+        selected_team = self.df.loc[selected_indices]
+
+        return selected_team
