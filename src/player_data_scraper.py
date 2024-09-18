@@ -38,3 +38,12 @@ def retrieve_player_data():
     else:
         print("Error: No player data available.")
         return None
+    
+# Define the directory path to save the data files
+output_directory = r"C:\Users\johns\Programming\Python\Projects\FPL-Predictive-Models\data"
+
+# Create the directory if it doesn't already exist
+os.makedirs(output_directory, exist_ok=True)
+
+# Specify the file path for saving player data
+player_data_csv_path = os.path.join(output_directory, "FPL_Player_Data_GW3_24-25.csv")
