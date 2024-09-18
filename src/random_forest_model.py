@@ -5,6 +5,7 @@ import pandas as pd
 import numpy as np
 from sklearn.model_selection import train_test_split, cross_val_score
 from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
+from sklearn.ensemble import RandomForestRegressor
 from sklearn.preprocessing import StandardScaler
 import matplotlib.pyplot as plt
 from pulp import LpMaximize, LpProblem, LpVariable, lpSum, value
@@ -201,13 +202,13 @@ if __name__ == "__main__":
     metrics_dict = {
         'Attacker': [],
         'Midfielder': [],
-        'Defender/Goalkeeper': []
+        'Defender\Goalkeeper': []
     }
 
-    coefficients_dict = {
+    feature_importance_dict = {
         'Attacker': [],
         'Midfielder': [],
-        'Defender/Goalkeeper': []
+        'Defender\Goalkeeper': []
     }
     
     # Load the player data
@@ -219,8 +220,8 @@ if __name__ == "__main__":
     attacker_model = PlayerModel(attackers_df, attacker_features)
     attacker_metrics = attacker_model.train_model()
     attackers_df = attacker_model.add_predictions()
-    metrics_dict['Attacker'].append(attacker_metrics)
-    coefficients_dict['Attacker'] = dict(zip(attacker_features, attacker_model.model.coef_))
+    metrics_dict['Attacker'].append(attacker_metrics[:5])
+    feature_importance_dict['Attacker'] = attacker_metrics[5]
     attacker_selector = TeamSelector(attackers_df, budget_constraint=300, max_players=3)
     selected_attackers = attacker_selector.select_players()
 
@@ -230,42 +231,41 @@ if __name__ == "__main__":
     midfielder_model = PlayerModel(midfielders_df, midfielder_features)
     midfielder_metrics = midfielder_model.train_model()
     midfielders_df = midfielder_model.add_predictions()
-    metrics_dict['Midfielder'].append(midfielder_metrics)
-    coefficients_dict['Midfielder'] = dict(zip(midfielder_features, midfielder_model.model.coef_))
+    metrics_dict['Midfielder'].append(midfielder_metrics[:5])
+    feature_importance_dict['Midfielder'] = midfielder_metrics[5]
     midfielder_selector = TeamSelector(midfielders_df, budget_constraint=350, max_players=5)
     selected_midfielders = midfielder_selector.select_players()
-
     # Defenders and goalkeepers model and selection
     defenders_df = players_df[(players_df['element_type'] == 2) | (players_df['element_type'] == 1)]
     defender_features = ['bps', 'clean_sheets', 'goals_conceded', 'expected_goals_conceded', 'saves', 'saves_per_90']
     defender_model = PlayerModel(defenders_df, defender_features)
     defender_metrics = defender_model.train_model()
     defenders_df = defender_model.add_predictions()
-    metrics_dict['Defender/Goalkeeper'].append(defender_metrics)
-    coefficients_dict['Defender/Goalkeeper'] = dict(zip(defender_features, defender_model.model.coef_))
+    metrics_dict['Defender\Goalkeeper'].append(defender_metrics[:5])
+    feature_importance_dict['Defender\Goalkeeper'] = defender_metrics[5]
     defender_selector = TeamSelector(defenders_df, budget_constraint=400, max_players=7, exact_goalkeepers=2, exact_defenders=5)
     selected_defenders = defender_selector.select_players()
 
     # Combine all selected players into a final squad
     selected_attackers['Position'] = 'Attacker'
     selected_midfielders['Position'] = 'Midfielder'
-    selected_defenders['Position'] = 'Defender/Goalkeeper'
+    selected_defenders['Position'] = 'Defender\Goalkeeper'
     combined_squad = pd.concat([selected_attackers, selected_midfielders, selected_defenders])
     combined_squad = combined_squad[['web_name', 'Position', 'now_cost']].sort_values(by='Position')
     
     # Print the selected squad and total cost
-    print("/nCombined Squad:")
-    print("Defenders/Goalkeepers:/n", combined_squad[combined_squad['Position'] == 'Defender/Goalkeeper'])
-    print("Midfielders:/n", combined_squad[combined_squad['Position'] == 'Midfielder'])
-    print("Attackers:/n", combined_squad[combined_squad['Position'] == 'Attacker'])
+    print("\nCombined Squad:")
+    print("Defenders\Goalkeepers:\n", combined_squad[combined_squad['Position'] == 'Defender\Goalkeeper'])
+    print("Midfielders:\n", combined_squad[combined_squad['Position'] == 'Midfielder'])
+    print("Attackers:\n", combined_squad[combined_squad['Position'] == 'Attacker'])
 
     total_cost = combined_squad['now_cost'].sum()
-    print(f"/nTotal Cost of Selected Squad: {total_cost} million")
+    print(f"\nTotal Cost of Selected Squad: {total_cost} million")
 
     # Print average evaluation metrics for each position
     for position, metrics in metrics_dict.items():
         avg_metrics = np.mean(metrics, axis=0)
-        print(f"/nAverage Evaluation Metrics for {position}:")
+        print(f"\nAverage Evaluation Metrics for {position}:")
         print(f"  Mean Absolute Error (MAE): {avg_metrics[0]}")
         print(f"  Mean Squared Error (MSE): {avg_metrics[1]}")
         print(f"  R^2 Score: {avg_metrics[2]}")
@@ -273,6 +273,6 @@ if __name__ == "__main__":
         print(f"  Cross-Validation MSE: {avg_metrics[4]}")
 
         # Print feature coefficients for each position
-        print(f"/nFeature Coefficients for {position}:")
-        for feature, coef in coefficients_dict[position].items():
-            print(f"  {feature}: {coef:.4f}")
+        print(f"\nFeature Coefficients for {position}:")
+        for feature, importance in feature_importance_dict[position].items():
+            print(f"  {feature}: {importance:.4f}")
