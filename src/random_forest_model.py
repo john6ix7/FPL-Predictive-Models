@@ -27,6 +27,98 @@ class PlayerModel:
         self.target = target
         self.model = None
         self.scaler = StandardScaler()
+
+    def train_model(self, test_size=0.1, random_state=42, n_estimators=100):
+        """
+        Train a RandomForestRegressor model and evaluate it using test data.
+        :param test_size: Fraction of data used for testing
+        :param random_state: Seed for random number generation
+        :param n_estimators: Number of trees in the random forest
+        :return: A tuple containing evaluation metrics (MAE, MSE, R^2, MAPE, cross-validation MSE, feature importances)
+        """
+        # Split the data into features (X) and target (y)
+        X = self.df[self.features]
+        y = self.df[self.target]
+        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=test_size, random_state=random_state)
+
+        # Standardize the feature data
+        X_train = self.scaler.fit_transform(X_train)
+        X_test = self.scaler.transform(X_test)
+
+        # Train the Random Forest Regressor model
+        self.model = RandomForestRegressor(n_estimators=n_estimators, random_state=random_state)
+        self.model.fit(X_train, y_train)
+
+        # Predict on test data and evaluate the model
+        y_pred = self.model.predict(X_test)
+        return self.evaluate_model(y_test, y_pred)
+
+    def evaluate_model(self, y_test, y_pred):
+        """
+        Evaluate the model using common regression metrics and plot feature importance.
+        :param y_test: True values from the test set
+        :param y_pred: Predicted values from the model
+        :return: Evaluation metrics and feature importances
+        """
+        # Calculate regression metrics
+        mae = mean_absolute_error(y_test, y_pred)
+        mse = mean_squared_error(y_test, y_pred)
+        r2 = r2_score(y_test, y_pred)
+
+        # Calculate Mean Absolute Percentage Error (MAPE), excluding zero values in y_test
+        def calculate_mape(y_true, y_pred):
+            non_zero_indices = y_true != 0
+            if np.any(non_zero_indices):
+                return np.mean(np.abs((y_true[non_zero_indices] - y_pred[non_zero_indices]) / y_true[non_zero_indices])) * 100
+            else:
+                return np.inf
+
+        mape = calculate_mape(y_test, y_pred)
+
+        # Print evaluation metrics
+        print("Model Evaluation Metrics:")
+        print(f"Mean Absolute Error (MAE): {mae}")
+        print(f"Mean Squared Error (MSE): {mse}")
+        print(f"R^2 Score: {r2}")
+        print(f"Mean Absolute Percentage Error (MAPE): {mape}%")
+
+        # Perform cross-validation to calculate mean squared error
+        scores = cross_val_score(self.model, self.scaler.transform(self.df[self.features]), self.df[self.target], cv=5, scoring='neg_mean_squared_error')
+        cv_mse = -scores.mean()
+        print(f"Cross-Validation MSE: {cv_mse}")
+
+        # Plot feature importance
+        self.plot_feature_importance()
+
+        # Get feature importance from the trained model
+        feature_importances = dict(zip(self.features, self.model.feature_importances_))
+
+        return mae, mse, r2, mape, cv_mse, feature_importances
+
+    def plot_feature_importance(self):
+        """
+        Plot the importance of each feature used by the RandomForest model.
+        """
+        feature_importance = self.model.feature_importances_
+        importance_df = pd.DataFrame({'Feature': self.features, 'Importance': feature_importance})
+        importance_df.sort_values(by='Importance', ascending=False, inplace=True)
+
+        # Plot feature importance as a horizontal bar chart
+        plt.figure(figsize=(10, 6))
+        plt.barh(importance_df['Feature'], importance_df['Importance'], color='skyblue')
+        plt.xlabel('Importance')
+        plt.ylabel('Feature')
+        plt.title('Feature Importance')
+        plt.gca().invert_yaxis()  # Invert the y-axis to have the highest importance on top
+        plt.show()
+
+    def add_predictions(self):
+        """
+        Add predicted performance (based on the trained model) to the DataFrame.
+        :return: DataFrame with a new 'predicted_performance' column
+        """
+        self.df['predicted_performance'] = self.model.predict(self.scaler.transform(self.df[self.features]))
+        return self.df
         
     
 class TeamSelector:
