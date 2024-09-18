@@ -24,3 +24,17 @@ def fetch_data_from_api(endpoint):
 def export_dataframe_to_csv(dataframe, file_path):
     dataframe.to_csv(file_path, index=False)  # Save DataFrame to CSV without the index
     print(f"Data successfully saved to {file_path}")
+    
+# Function to fetch and process player data from the FPL API
+def retrieve_player_data(): 
+    # Fetch comprehensive FPL data
+    fpl_data = fetch_data_from_api("bootstrap-static/")
+    if fpl_data:
+        # Extract the relevant 'elements' section containing player details
+        player_info = fpl_data.get("elements", [])
+        # Convert the player data into a DataFrame
+        player_df = pd.DataFrame(player_info)
+        return player_df
+    else:
+        print("Error: No player data available.")
+        return None
