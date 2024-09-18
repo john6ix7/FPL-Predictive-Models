@@ -207,3 +207,17 @@ def load_data(file_path):
     except FileNotFoundError:
         print(f"Error: File not found at {file_path}")
         return pd.DataFrame()
+
+if __name__ == "__main__":
+    # Initialize dictionaries to store evaluation metrics and feature coefficients for each position
+    metrics_dict = {
+        'Attacker': [],
+        'Midfielder': [],
+        'Defender/Goalkeeper': []
+    }
+
+    coefficients_dict = {
+        'Attacker': [],
+        'Midfielder': [],
+        'Defender/Goalkeeper': []
+    }
