@@ -221,3 +221,46 @@ if __name__ == "__main__":
         'Midfielder': [],
         'Defender/Goalkeeper': []
     }
+    
+    # Load the player data
+    players_df = load_data('C:/Users/johns/Programming/Python/Research_project/code/FPL_model_JW/data/FPL_Player_GW2_24-25.csv')
+
+    # Attackers model and selection
+    attackers_df = players_df[players_df['element_type'] == 4]
+    attacker_features = ['bps', 'goals_scored', 'expected_goals', 'expected_goal_involvements', 'assists', 'expected_assists']
+    attacker_model = PlayerModel(attackers_df, attacker_features)
+    attacker_metrics = attacker_model.train_model()
+    attackers_df = attacker_model.add_predictions()
+    metrics_dict['Attacker'].append(attacker_metrics)
+    coefficients_dict['Attacker'] = dict(zip(attacker_features, attacker_model.model.coef_))
+    attacker_selector = TeamSelector(attackers_df, budget_constraint=300, max_players=3)
+    selected_attackers = attacker_selector.select_players()
+
+    # Midfielders model and selection
+    midfielders_df = players_df[players_df['element_type'] == 3]
+    midfielder_features = ['bps', 'goals_scored', 'expected_goals', 'expected_goal_involvements', 'assists', 'expected_assists']
+    midfielder_model = PlayerModel(midfielders_df, midfielder_features)
+    midfielder_metrics = midfielder_model.train_model()
+    midfielders_df = midfielder_model.add_predictions()
+    metrics_dict['Midfielder'].append(midfielder_metrics)
+    coefficients_dict['Midfielder'] = dict(zip(midfielder_features, midfielder_model.model.coef_))
+    midfielder_selector = TeamSelector(midfielders_df, budget_constraint=350, max_players=5)
+    selected_midfielders = midfielder_selector.select_players()
+
+    # Defenders and goalkeepers model and selection
+    defenders_df = players_df[(players_df['element_type'] == 2) | (players_df['element_type'] == 1)]
+    defender_features = ['bps', 'clean_sheets', 'goals_conceded', 'expected_goals_conceded', 'saves', 'saves_per_90']
+    defender_model = PlayerModel(defenders_df, defender_features)
+    defender_metrics = defender_model.train_model()
+    defenders_df = defender_model.add_predictions()
+    metrics_dict['Defender/Goalkeeper'].append(defender_metrics)
+    coefficients_dict['Defender/Goalkeeper'] = dict(zip(defender_features, defender_model.model.coef_))
+    defender_selector = TeamSelector(defenders_df, budget_constraint=400, max_players=7, exact_goalkeepers=2, exact_defenders=5)
+    selected_defenders = defender_selector.select_players()
+
+    # Combine all selected players into a final squad
+    selected_attackers['Position'] = 'Attacker'
+    selected_midfielders['Position'] = 'Midfielder'
+    selected_defenders['Position'] = 'Defender/Goalkeeper'
+    combined_squad = pd.concat([selected_attackers, selected_midfielders, selected_defenders])
+    combined_squad = combined_squad[['web_name', 'Position', 'now_cost']].sort_values(by='Position')
