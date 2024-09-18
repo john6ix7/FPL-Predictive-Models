@@ -46,4 +46,10 @@ output_directory = r"C:\Users\johns\Programming\Python\Projects\FPL-Predictive-M
 os.makedirs(output_directory, exist_ok=True)
 
 # Specify the file path for saving player data
-player_data_csv_path = os.path.join(output_directory, "FPL_Player_Data_GW3_24-25.csv")
+player_data_csv_path = os.path.join(output_directory, "FPL_Player_Data_GW4_24-25.csv")
+
+
+# Retrieve player data and save it to a CSV file
+player_data = retrieve_player_data()
+if player_data is not None:
+    export_dataframe_to_csv(player_data, player_data_csv_path)
