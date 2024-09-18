@@ -264,3 +264,27 @@ if __name__ == "__main__":
     selected_defenders['Position'] = 'Defender/Goalkeeper'
     combined_squad = pd.concat([selected_attackers, selected_midfielders, selected_defenders])
     combined_squad = combined_squad[['web_name', 'Position', 'now_cost']].sort_values(by='Position')
+    
+    # Print the selected squad and total cost
+    print("\nCombined Squad:")
+    print("Defenders/Goalkeepers:\n", combined_squad[combined_squad['Position'] == 'Defender/Goalkeeper'])
+    print("Midfielders:\n", combined_squad[combined_squad['Position'] == 'Midfielder'])
+    print("Attackers:\n", combined_squad[combined_squad['Position'] == 'Attacker'])
+
+    total_cost = combined_squad['now_cost'].sum()
+    print(f"\nTotal Cost of Selected Squad: {total_cost} million")
+
+    # Print average evaluation metrics for each position
+    for position, metrics in metrics_dict.items():
+        avg_metrics = np.mean(metrics, axis=0)
+        print(f"\nAverage Evaluation Metrics for {position}:")
+        print(f"  Mean Absolute Error (MAE): {avg_metrics[0]}")
+        print(f"  Mean Squared Error (MSE): {avg_metrics[1]}")
+        print(f"  R^2 Score: {avg_metrics[2]}")
+        print(f"  Mean Absolute Percentage Error (MAPE): {avg_metrics[3]}%")
+        print(f"  Cross-Validation MSE: {avg_metrics[4]}")
+
+        # Print feature coefficients for each position
+        print(f"\nFeature Coefficients for {position}:")
+        for feature, coef in coefficients_dict[position].items():
+            print(f"  {feature}: {coef:.4f}")
